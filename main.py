@@ -1,3 +1,4 @@
+import json
 import os
 from dotenv import load_dotenv
 from google import genai
@@ -5,24 +6,20 @@ from google import genai
 # from google.genai import types
 from datetime import datetime
 
-MODEL_ID = "gemini-2.5-flash"  # @param ["gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-2.5-pro","gemini-3-pro-preview"] {"allow-input":true, isTemplate: true}
-
 load_dotenv()
 api_key = os.environ.get("GEMINI_API_KEY")
 if api_key is None:
     raise RuntimeError("GEMINI_API_KEY environment variable not set")
 client = genai.Client(api_key=api_key)
 
-prompt = "Why is Boot.dev such a great place to learn backend development? Use one paragraph maximum."
-
 
 def main():
-    # Token Max
-    t_max = token_max(MODEL_ID)
-    print(t_max)
-    # Count tokens
+    # Get settings from config
+    config = load_config()
+    model_id = config["model_id"]
+    prompt = config["default_prompt"]
 
-    response = prompt_request(MODEL_ID, prompt)
+    response = prompt_request(model_id, prompt)
     response_tokens = 0
     prompt_tokens = 0
     metadata = response.usage_metadata.candidates_token_count
@@ -38,6 +35,11 @@ def main():
     print("Response tokens: ", response_tokens)
     print("Response:")
     print(response.text)
+
+
+def load_config(config_path="config.json"):
+    with open(config_path, "r") as f:
+        return json.load(f)
 
 
 def get_current_timestamp():
