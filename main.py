@@ -1,33 +1,33 @@
 import json
 import os
+from typing import Any 
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types as genai_types
 
 # from google.genai import types
 from datetime import datetime
 
-load_dotenv()
+_ = load_dotenv()
 api_key = os.environ.get("GEMINI_API_KEY")
 if api_key is None:
     raise RuntimeError("GEMINI_API_KEY environment variable not set")
 client = genai.Client(api_key=api_key)
 
-
 def main():
     # Get settings from config
-    config = load_config()
-    model_id = config["model_id"]
+    config= load_config()
+    model_id= config["model_id"]
     prompt = config["default_prompt"]
 
     response = prompt_request(model_id, prompt)
-    response_tokens = 0
-    prompt_tokens = 0
-    metadata = response.usage_metadata.candidates_token_count
-    if metadata is not None:
-        prompt_tokens = response.usage_metadata.prompt_token_count
-        response_tokens = response.usage_metadata.candidates_token_count
-    else:
-        print("Metadata returned None, there is no token count this time.")
+
+    useage = response.usage_metadata
+    if useage is None:
+        raise RuntimeError("Metadata returned None, there is no token count this time.")
+
+    prompt_tokens = useage.prompt_token_count or 0
+    response_tokens = useage.candidates_token_count or 0
 
     # print(response)
     print("User propmt:", prompt)
@@ -36,48 +36,33 @@ def main():
     print("Response:")
     print(response.text)
 
-
-def load_config(config_path="config.json"):
+def load_config(config_path: str="config.json") -> dict[str, Any]:
     with open(config_path, "r") as f:
         return json.load(f)
 
-
-def get_current_timestamp():
+def get_current_timestamp()-> str:
     return datetime.now().isoformat() + "Z"
 
+def prompt_request(model: str, prompt: str) -> genai_types.GenerateContentResponse:
+    prompt_response: genai_types.GenerateContentResponse= client.models.generate_content(model=model, contents=prompt)
+    return prompt_response
 
-def chat_with_gemini(user_input):
-    if user_input.usage_metadata is not None:
-        usage_metadata = {
-            "usage_token_count": 0,  # Initialize
-            "timestamp": get_current_timestamp(),
-        }
-    return usage_metadata
-
-
-def token_max(AI_model):
-    model_info = client.models.get(model=AI_model)  # """model"""
-    prompt_max = model_info.input_token_limit
-    response_max = model_info.output_token_limit
+def token_max(AI_model: str) -> tuple[int | None, int | None]:
+    model_info: genai_types.Model = client.models.get(model=AI_model)
+    prompt_max: int | None = model_info.input_token_limit
+    response_max: int | None = model_info.output_token_limit
 
     print("Context window:", prompt_max, "tokens")
     print("Max output window:", response_max, "tokens")
 
     return (prompt_max, response_max)
 
-
-def token_count(model, prompt):
+def token_count(model: str, prompt: str):
     prompt_response = client.models.count_tokens(
         model=model,
         contents=prompt,
     )
     return prompt_response
-
-
-def prompt_request(model, prompt):
-    response = client.models.generate_content(model=model, contents=prompt)
-    return response
-
 
 if __name__ == "__main__":
     main()
