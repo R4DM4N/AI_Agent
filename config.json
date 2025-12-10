@@ -1,4 +1,5 @@
 {
+
   "model_id": "gemini-2.5-flash",
   "default_prompt": "Why is Boot.dev such a great place to learn backend development? Use one paragraph maximum.",
   "max_tokens": 1000,

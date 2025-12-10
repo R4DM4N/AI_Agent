@@ -1,7 +1,6 @@
 import json
 import os
 import argparse
-import re
 from typing import Any 
 from dotenv import load_dotenv
 from google import genai
@@ -17,7 +16,6 @@ if api_key is None:
     raise RuntimeError("GEMINI_API_KEY environment variable not set")
 client = genai.Client(api_key=api_key)
 
-
 def main():
     # Get settings from config
     config= load_config()
@@ -27,7 +25,6 @@ def main():
     #print("default_prompt", prompt_reserve)
     # Get prompt from arguments 
     prompt =  parser_fn()
-  
     
     response = prompt_request(model_id, prompt)
     if response is None or response.usage_metadata is None:
