@@ -19,6 +19,7 @@ client = genai.Client(api_key=api_key)
 
 
 def main():
+    '''
     # Get settings from config
     config= load_config()
     model_id= config["model_id"]
@@ -27,8 +28,16 @@ def main():
     #print("default_prompt", prompt_reserve)
     # Get prompt from arguments 
     prompt =  parser_fn()
-  
+    '''
+    message: listAny[] = [types.Content(role="user", parts=
+                             [types.Part(text=args.uesr_prompt)])]
     
+    '''
+    response = client.models.generate_content(
+    model="gemini-2.5-flash",
+    contents=messages,
+    )
+    '''
     response = prompt_request(model_id, prompt)
     if response is None or response.usage_metadata is None:
         raise RuntimeError("Metadata returned None, there is no token count this time.")
@@ -55,7 +64,7 @@ def parser_fn(description="Chatbot")-> str:
     )
     parser.add_argument(
         "prompt", 
-        type=str, 
+        type=str,  find_function
         help="User prompt"
     )
     args = parser.parse_args()
